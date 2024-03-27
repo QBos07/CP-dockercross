@@ -23,11 +23,12 @@ COPY --from=ct-ng-build /ct-ng /ct-ng
 RUN mkdir -p /toolchain-build
 WORKDIR /toolchain-build
 COPY defconfig defconfig
-RUN /ct-ng/bin/ct-ng defconfig
-ENV CT_PREFIX /toolchain
-ENV CT_ALLOW_BUILD_AS_ROOT_SURE 1
-RUN /ct-ng/bin/ct-ng build
-ENV PATH $PATH:/toolchain/bin
+RUN echo CT_PREFIX_DIR=/toolchain >>defconfig && \
+    echo CT_ALLOW_BUILD_AS_ROOT=y >>defconfig && \
+    echo CT_ALLOW_BUILD_AS_ROOT_SURE=y >>defconfig && \
+    echo CT_LOG_PROGRESS_BAR=n >>defconfig && \
+    /ct-ng/bin/ct-ng defconfig
+RUN /ct-ng/bin/ct-ng build || (tail -250 build.log && exit 1)
 FROM debian:stable-slim AS sdk-build
 RUN apt-get update -y && apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
@@ -36,20 +37,22 @@ RUN apt-get install -y --reinstall ca-certificates
 COPY --from=toolchain-build /toolchain /toolchain
 RUN mkdir -p /sdk-build
 WORKDIR /sdk-build
-RUN git clone -b stdlib_compatibility --single-branch https://github.com/diddyholz/hollyhock-2.git --depth=1
+RUN git clone -b main --single-branch https://github.com/qbos07/hollyhock-2.git --depth=1
 WORKDIR /sdk-build/hollyhock-2/sdk
+ENV PATH $PATH:/toolchain/bin
 RUN make -j
 RUN mkdir -p /sdk
 RUN cp -d libsdk.a sdk.o /sdk && cp -r include /sdk
-ENV SDK_DIR /sdk
 FROM debian:stable-slim AS final
 RUN apt-get update -y && apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
     make libncurses6\
     gawk wget bzip2 xz-utils unzip \
-    patch libstdc++6 rsync git
+    patch libstdc++6 rsync git clangd bear
 RUN apt-get install -y --reinstall ca-certificates
 COPY --from=toolchain-build /toolchain /toolchain
 COPY --from=sdk-build /sdk /sdk
+ENV SDK_DIR /sdk
+ENV PATH $PATH:/toolchain/bin
 RUN mkdir -p /work
 WORKDIR /work
