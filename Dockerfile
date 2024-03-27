@@ -23,10 +23,10 @@ COPY --from=ct-ng-build /ct-ng /ct-ng
 RUN mkdir -p /toolchain-build
 WORKDIR /toolchain-build
 COPY defconfig defconfig
-RUN echo CT_PREFIX_DIR=/toolchain >>defconfig && \
-    echo CT_ALLOW_BUILD_AS_ROOT=y >>defconfig && \
-    echo CT_ALLOW_BUILD_AS_ROOT_SURE=y >>defconfig && \
-    echo CT_LOG_PROGRESS_BAR=n >>defconfig && \
+RUN echo 'CT_PREFIX_DIR="/toolchain"' >>defconfig && \
+    echo 'CT_ALLOW_BUILD_AS_ROOT=y' >>defconfig && \
+    echo 'CT_ALLOW_BUILD_AS_ROOT_SURE=y' >>defconfig && \
+    echo 'CT_LOG_PROGRESS_BAR=n' >>defconfig && \
     /ct-ng/bin/ct-ng defconfig
 RUN /ct-ng/bin/ct-ng build || (tail -250 build.log && exit 1)
 FROM debian:stable-slim AS sdk-build
