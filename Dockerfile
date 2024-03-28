@@ -54,6 +54,21 @@ RUN make -j
 RUN mkdir -p /sdk
 RUN cp -d libsdk.a sdk.o /sdk && cp -r include /sdk
 
+FROM --platform=$BUILDPLATFORM debian:stable-slim AS oldsdk-build
+RUN apt-get update -y && apt-get upgrade -y && \
+    apt-get install -y --no-install-recommends \
+    make libstdc++6 git zstd zlib1g
+RUN apt-get install -y --reinstall ca-certificates
+COPY --from=toolchain-build /toolchain /toolchain
+RUN mkdir -p /oldsdk-build
+WORKDIR /oldsdk-build
+RUN git clone https://github.com/SnailMath/hollyhock-2.git --depth=1
+WORKDIR /oldsdk-build/hollyhock-2/sdk
+ENV PATH $PATH:/toolchain/bin
+RUN sed -i 's/-m4-nofpu/-m4a-nofpu/g' Makefile && make -j
+RUN mkdir -p /oldsdk
+RUN cp sdk.o /oldsdk && cp -r include /oldsdk
+
 FROM debian:stable-slim AS final
 RUN apt-get update -y && apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
@@ -63,7 +78,10 @@ RUN apt-get update -y && apt-get upgrade -y && \
 RUN apt-get install -y --reinstall ca-certificates
 COPY --from=toolchain-build /toolchain /toolchain
 COPY --from=sdk-build /sdk /sdk
-ENV SDK_DIR /sdk
+COPY --from=oldsdk-build /oldsdk /oldsdk
+ENV NEW_SDK_DIR /sdk
+ENV OLD_SDK_DIR /oldsdk
+ENV SDK_DIR $NEW_SDK_DIR
 ENV PATH $PATH:/toolchain/bin
 RUN mkdir -p /work
 WORKDIR /work
