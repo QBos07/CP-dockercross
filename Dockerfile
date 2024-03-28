@@ -1,5 +1,7 @@
 # syntax=docker/dockerfile:1
-FROM debian:stable-slim AS ct-ng-build
+FROM --platform=$BUILDPLATFORM tonistiigi/xx AS xx
+
+FROM --platform=$BUILDPLATFORM debian:stable-slim AS ct-ng-build
 RUN apt-get update -y && apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
     gcc g++ gperf bison flex texinfo help2man make libncurses-dev \
@@ -12,41 +14,50 @@ RUN git clone https://github.com/crosstool-ng/crosstool-ng.git --depth=1
 WORKDIR /ct-ng-build/crosstool-ng
 RUN ./bootstrap && ./configure --prefix=/ct-ng
 RUN make -j && make -j install
-FROM debian:stable-slim AS toolchain-build
+
+FROM --platform=$BUILDPLATFORM debian:stable-slim AS toolchain-build
+COPY --from=xx / /
+ENV XX_CC_PREFER_LINKER ld
 RUN apt-get update -y && apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
-    gcc g++ gperf bison flex texinfo help2man make libncurses6 \
-    python3-dev autoconf automake libtool libtool-bin gawk wget bzip2 xz-utils unzip \
-    patch libstdc++6 rsync git meson ninja-build
+    gperf bison flex texinfo help2man make libncurses6 \
+    autoconf automake libtool libtool-bin gawk wget bzip2 xz-utils unzip \
+    patch rsync git meson ninja-build clang
 RUN apt-get install -y --reinstall ca-certificates
+RUN xx-apt-get install -y --no-install-recommends gcc g++ binutils libc6 libstdc++6 zstd zlib1g-dev \
+    && xx-clang --setup-target-triple
 COPY --from=ct-ng-build /ct-ng /ct-ng
 RUN mkdir -p /toolchain-build
 WORKDIR /toolchain-build
 COPY defconfig defconfig
-RUN echo 'CT_PREFIX_DIR="/toolchain"' >>defconfig && \
+RUN (xx-info is-cross || echo 'CT_CANADIAN=y' >>defconfig) && \
+    echo "CT_HOST=\"$(xx-info triple)\"" >>defconfig && \
+    echo 'CT_PREFIX_DIR="/toolchain"' >>defconfig && \
     echo 'CT_ALLOW_BUILD_AS_ROOT=y' >>defconfig && \
     echo 'CT_ALLOW_BUILD_AS_ROOT_SURE=y' >>defconfig && \
     echo 'CT_LOG_PROGRESS_BAR=n' >>defconfig && \
-    /ct-ng/bin/ct-ng defconfig
+    cat defconfig && /ct-ng/bin/ct-ng defconfig
 RUN /ct-ng/bin/ct-ng build || (tail -250 build.log && exit 1)
-FROM debian:stable-slim AS sdk-build
+
+FROM --platform=$BUILDPLATFORM debian:stable-slim AS sdk-build
 RUN apt-get update -y && apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
-    make libstdc++6 git
+    make libstdc++6 git zstd zlib1g
 RUN apt-get install -y --reinstall ca-certificates
 COPY --from=toolchain-build /toolchain /toolchain
 RUN mkdir -p /sdk-build
 WORKDIR /sdk-build
-RUN git clone -b main --single-branch https://github.com/qbos07/hollyhock-2.git --depth=1
+RUN git clone https://github.com/qbos07/hollyhock-2.git --depth=1
 WORKDIR /sdk-build/hollyhock-2/sdk
 ENV PATH $PATH:/toolchain/bin
 RUN make -j
 RUN mkdir -p /sdk
 RUN cp -d libsdk.a sdk.o /sdk && cp -r include /sdk
+
 FROM debian:stable-slim AS final
 RUN apt-get update -y && apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
-    make libncurses6\
+    make libncurses6 zstd zlib1g\
     gawk wget bzip2 xz-utils unzip \
     patch libstdc++6 rsync git clangd bear
 RUN apt-get install -y --reinstall ca-certificates
