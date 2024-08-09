@@ -37,51 +37,21 @@ RUN (xx-info is-cross || echo 'CT_CANADIAN=y' >>defconfig) && \
     echo 'CT_ALLOW_BUILD_AS_ROOT_SURE=y' >>defconfig && \
     echo 'CT_LOG_PROGRESS_BAR=n' >>defconfig && \
     cat defconfig && /ct-ng/bin/ct-ng defconfig
+RUN /ct-ng/bin/ct-ng sources
 RUN /ct-ng/bin/ct-ng build || (tail -250 build.log && exit 1)
-
-FROM --platform=$BUILDPLATFORM debian:stable-slim AS sdk-build
-RUN apt-get update -y && apt-get upgrade -y && \
-    apt-get install -y --no-install-recommends \
-    make libstdc++6 git zstd zlib1g
-RUN apt-get install -y --reinstall ca-certificates
-COPY --from=toolchain-build /toolchain /toolchain
-RUN mkdir -p /sdk-build
-WORKDIR /sdk-build
-RUN git clone https://github.com/classpaddev/hollyhock-3.git --depth=1
-WORKDIR /sdk-build/hollyhock-2/sdk
-ENV PATH=$PATH:/toolchain/bin
-RUN make -j
-RUN mkdir -p /sdk
-RUN cp -d libsdk.a sdk.o /sdk && cp -r include /sdk
-
-FROM --platform=$BUILDPLATFORM debian:stable-slim AS oldsdk-build
-RUN apt-get update -y && apt-get upgrade -y && \
-    apt-get install -y --no-install-recommends \
-    make libstdc++6 git zstd zlib1g
-RUN apt-get install -y --reinstall ca-certificates
-COPY --from=toolchain-build /toolchain /toolchain
-RUN mkdir -p /oldsdk-build
-WORKDIR /oldsdk-build
-RUN git clone https://github.com/SnailMath/hollyhock-2.git --depth=1
-WORKDIR /oldsdk-build/hollyhock-2/sdk
-ENV PATH=$PATH:/toolchain/bin
-RUN sed -i 's/-m4-nofpu/-m4a-nofpu/g' Makefile && make -j
-RUN mkdir -p /oldsdk
-RUN cp sdk.o /oldsdk && cp -r include /oldsdk
 
 FROM debian:stable-slim AS final
 RUN apt-get update -y && apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
     make libncurses6 zstd zlib1g\
     gawk wget bzip2 xz-utils unzip \
-    patch libstdc++6 rsync git clangd bear
+    patch libstdc++6 rsync git
 RUN apt-get install -y --reinstall ca-certificates
 COPY --from=toolchain-build /toolchain /toolchain
-COPY --from=sdk-build /sdk /sdk
-COPY --from=oldsdk-build /oldsdk /oldsdk
-ENV NEW_SDK_DIR=/sdk
-ENV OLD_SDK_DIR=/oldsdk
-ENV SDK_DIR=$NEW_SDK_DIR
 ENV PATH=$PATH:/toolchain/bin
 RUN mkdir -p /work
 WORKDIR /work
+
+LABEL org.opencontainers.image.source=https://github.com/QBos07/CP-dockercross
+LABEL org.opencontainers.image.authors="qubos@outlook.de"
+LABEL org.opencontainers.image.vendor="QBos07"
