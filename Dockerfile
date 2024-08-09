@@ -37,7 +37,7 @@ RUN (xx-info is-cross || echo 'CT_CANADIAN=y' >>defconfig) && \
     echo 'CT_ALLOW_BUILD_AS_ROOT_SURE=y' >>defconfig && \
     echo 'CT_LOG_PROGRESS_BAR=n' >>defconfig && \
     cat defconfig && /ct-ng/bin/ct-ng defconfig
-RUN /ct-ng/bin/ct-ng sources
+RUN /ct-ng/bin/ct-ng source
 RUN /ct-ng/bin/ct-ng build || (tail -250 build.log && exit 1)
 
 FROM debian:stable-slim AS final
