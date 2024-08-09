@@ -47,7 +47,7 @@ RUN apt-get install -y --reinstall ca-certificates
 COPY --from=toolchain-build /toolchain /toolchain
 RUN mkdir -p /sdk-build
 WORKDIR /sdk-build
-RUN git clone https://github.com/classpaddac/hollyhock3 --depth=1
+RUN git clone https://github.com/classpaddev/hollyhock3.git --depth=1
 WORKDIR /sdk-build/hollyhock-2/sdk
 ENV PATH $PATH:/toolchain/bin
 RUN make -j
