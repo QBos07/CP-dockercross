@@ -27,7 +27,6 @@ CT_CC_GCC_ENABLE_CXX_FLAGS="-fvtable-gc -fno-exceptions -ffunction-sections -fda
 CT_CC_GCC_MULTILIB_LIST="m4a-nofpu"
 # CT_CC_GCC_STATIC_LIBSTDCXX is not set
 CT_CC_GCC_SYSTEM_ZLIB=y
-CT_CC_GCC_LIBSSP=m
 CT_CC_GCC_LIBQUADMATH=y
 # CT_CC_CXA_ATEXIT is not set
 CT_CC_GCC_LNK_HASH_STYLE_BOTH=y
