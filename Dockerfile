@@ -22,11 +22,11 @@ RUN apt-get update -y && apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
     gperf bison flex texinfo help2man make libncurses6 \
     autoconf automake libtool libtool-bin gawk wget bzip2 xz-utils unzip \
-    patch rsync git meson ninja-build clang
+    patch rsync git meson ninja-build \
+    gcc g++ binutils libstdc++6 zstd zlib1g-dev
 RUN apt-get install -y --reinstall ca-certificates
 ARG TARGETPLATFORM
-RUN xx-apt-get install -y --no-install-recommends gcc g++ binutils libc6 libstdc++6 zstd zlib1g-dev \
-    && xx-clang --setup-target-triple
+RUN xx-apt-get install -y --no-install-recommends gcc g++ binutils libc6 libstdc++6 zstd zlib1g-dev
 COPY --from=ct-ng-build /ct-ng /ct-ng
 RUN mkdir -p /toolchain-build
 WORKDIR /toolchain-build
