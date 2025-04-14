@@ -10,7 +10,7 @@ RUN apt-get update -y && apt-get upgrade -y && \
 RUN apt-get install -y --reinstall ca-certificates
 RUN mkdir -p /ct-ng-build
 WORKDIR /ct-ng-build
-RUN git clone https://github.com/crosstool-ng/crosstool-ng.git --depth=1
+RUN git clone https://github.com/QBos07/crosstool-ng.git --branch sh-fpu --depth=1
 WORKDIR /ct-ng-build/crosstool-ng
 RUN ./bootstrap && ./configure --prefix=/ct-ng
 RUN make -j && make -j install
@@ -46,7 +46,7 @@ RUN apt-get update -y && apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
     make libncurses6 zstd zlib1g\
     gawk wget bzip2 xz-utils unzip \
-    patch libstdc++6 rsync git
+    patch libstdc++6 rsync git mold
 RUN apt-get install -y --reinstall ca-certificates
 COPY --from=toolchain-build /toolchain /toolchain
 ENV PATH=$PATH:/toolchain/bin
