@@ -1,0 +1,32 @@
+diff --git a/ld/emulparams/shelf.sh b/ld/emulparams/shelf.sh
+index 63c2ff19..e63a57ab 100644
+--- a/ld/emulparams/shelf.sh
++++ b/ld/emulparams/shelf.sh
+@@ -4,20 +4,15 @@
+ SCRIPT_NAME=elf
+ OUTPUT_FORMAT="elf32-sh"
+ NO_REL_RELOCS=yes
+-TEXT_START_ADDR=0x1000
+-MAXPAGESIZE=128
++TEXT_START_ADDR=0x8CFF0000
++MAXPAGESIZE="CONSTANT (MAXPAGESIZE)"
++COMMONPAGESIZE="CONSTANT (COMMONPAGESIZE)"
+ ARCH=sh
+ MACHINE=
+ TEMPLATE_NAME=elf
+ GENERATE_SHLIB_SCRIPT=yes
++GENERATE_PIE_SCRIPT=yes
+ EMBEDDED=yes
+-# These are for compatibility with the COFF toolchain.
+-ENTRY=start
+-CTOR_START='___ctors = .;'
+-CTOR_END='___ctors_end = .;'
+-DTOR_START='___dtors = .;'
+-DTOR_END='___dtors_end = .;'
+-STACK_ADDR="(DEFINED(_stack) ? _stack : 0x3FFFFF00)"
+-STACK_SENTINEL="LONG(0xdeaddead)"
+-# We do not need .stack for shared library.
+-test -n "$CREATE_SHLIB" && unset STACK_ADDR
++
++OTHER_READWRITE_SECTIONS="
++  .note.hollyhock ${RELOCATING-0} : { *(.note.hollyhock) }"
