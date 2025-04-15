@@ -30,7 +30,7 @@ RUN xx-apt-get install -y --no-install-recommends gdc gcc g++ binutils libc6 lib
 COPY --from=ct-ng-build /ct-ng /ct-ng
 RUN mkdir -p /toolchain-build
 WORKDIR /toolchain-build
-COPY defconfig defconfig
+COPY defconfig patches/ ./
 RUN (xx-info is-cross && (echo 'CT_CANADIAN=y' >>defconfig || exit 1) || true) && \
     echo "CT_HOST=\"$(xx-info triple)\"" >>defconfig && \
     echo 'CT_PREFIX_DIR="/toolchain"' >>defconfig && \
