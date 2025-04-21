@@ -733,7 +733,7 @@ new file mode 100644
 index 000000000..bac2daf80
 --- /dev/null
 +++ b/libgcc/config/sh/crt1.c
-@@ -0,0 +1,40 @@
+@@ -0,0 +1,39 @@
 +
 +typedef int jmp_buf[20];
 +
@@ -768,8 +768,7 @@ index 000000000..bac2daf80
 +    exit(main(argc, argv, envp));
 +}
 +
-+void my_exit(int status) __asm__("__exit_address") __attribute__((noreturn));
-+void my_exit(int status)
++__attribute__((noreturn)) void _exit_address(int status)
 +{
 +  exit_code = status;
 +  longjmp(buf, 1);
