@@ -13,6 +13,7 @@ CT_TOOLCHAIN_ENABLE_NLS=y
 CT_BINUTILS_PLUGINS=y
 CT_NEWLIB_SRC_DEVEL=y
 CT_NEWLIB_DEVEL_URL="https://github.com/qbos07/newlib-cp2.git"
+CT_LIBC_NEWLIB_TARGET_CFLAGS="-fno-builtin"
 CT_LIBC_NEWLIB_IO_C99FMT=y
 CT_LIBC_NEWLIB_IO_FLOAT=y
 # CT_LIBC_NEWLIB_FVWRITE_IN_STREAMIO is not set
@@ -25,7 +26,7 @@ CT_LIBC_NEWLIB_EXTRA_SECTIONS=y
 # CT_LIBC_NEWLIB_WIDE_ORIENT is not set
 CT_LIBC_NEWLIB_LTO=y
 CT_LIBC_NEWLIB_EXTRA_CONFIG_ARRAY="--enable-newlib-elix-level=3"
-CT_CC_GCC_ENABLE_CXX_FLAGS="-fvtable-gc -ffunction-sections -fdata-sections -flto -Os"
+CT_CC_GCC_ENABLE_CXX_FLAGS="-fvtable-gc -ffunction-sections -fdata-sections -flto -fno-builtin"
 CT_CC_GCC_EXTRA_CONFIG_ARRAY="--enable-libbacktrace"
 CT_CC_GCC_MULTILIB_LIST=""
 # CT_CC_GCC_STATIC_LIBSTDCXX is not set
