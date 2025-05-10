@@ -1,0 +1,39 @@
+From 6462f1e6a2565c5d4756036d9bc2f39dce9bd768 Mon Sep 17 00:00:00 2001
+From: QBos07 <qubos@outlook.de>
+Date: Sat, 10 May 2025 16:56:28 +0000
+Subject: [PATCH] libgcc SH: fix alignment for relaxation
+
+when relaxation is enabled we can not infer the alignment
+from the position as that may change. This should not change
+non-relaxed builds as its allready aligned there. This was
+the missing piece to building an entire toolchain with -mrelax
+
+Credit goes to Oleg Endo: https://sourceware.org/bugzilla/show_bug.cgi?id=3298#c4
+---
+ libgcc/config/sh/lib1funcs.S | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/libgcc/config/sh/lib1funcs.S b/libgcc/config/sh/lib1funcs.S
+index eda48066c..11acfd5e3 100644
+--- a/libgcc/config/sh/lib1funcs.S
++++ b/libgcc/config/sh/lib1funcs.S
+@@ -115,7 +115,7 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+ 	HIDDEN_FUNC(GLOBAL(ashiftrt_r4_31))
+ 	HIDDEN_FUNC(GLOBAL(ashiftrt_r4_32))
+ 
+-	.align	1
++	.align	4
+ GLOBAL(ashiftrt_r4_32):
+ GLOBAL(ashiftrt_r4_31):
+ 	rotcl	r4
+@@ -764,6 +764,7 @@ LOCAL(movmem_loop): /* Reached with rts */
+ 	bt	GLOBAL(movmemSI52)
+ ! done all the large groups, do the remainder
+ ! jump to movmem+
++	.balign	4
+ 	mova	GLOBAL(movmemSI4)+4,r0
+ 	add	r6,r0
+ 	jmp	@r0
+-- 
+2.43.0
+
