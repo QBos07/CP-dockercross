@@ -8,12 +8,14 @@ CT_OMIT_TARGET_VENDOR=y
 CT_DEMULTILIB=y
 # CT_ARCH_USE_MMU is not set
 CT_ARCH_BE=y
+CT_TARGET_CFLAGS="-mrelax"
+CT_TARGET_LDFLAGS="-mrelax"
 CT_TARGET_ALIAS="sh4aeb-elf"
 CT_TOOLCHAIN_ENABLE_NLS=y
 CT_BINUTILS_PLUGINS=y
 CT_NEWLIB_SRC_DEVEL=y
 CT_NEWLIB_DEVEL_URL="https://github.com/qbos07/newlib-cp2.git"
-CT_LIBC_NEWLIB_TARGET_CFLAGS="-ffat-lto-objects -mrelax"
+CT_LIBC_NEWLIB_TARGET_CFLAGS="-ffat-lto-objects"
 CT_LIBC_NEWLIB_IO_C99FMT=y
 CT_LIBC_NEWLIB_IO_FLOAT=y
 # CT_LIBC_NEWLIB_FVWRITE_IN_STREAMIO is not set
@@ -26,7 +28,7 @@ CT_LIBC_NEWLIB_EXTRA_SECTIONS=y
 # CT_LIBC_NEWLIB_WIDE_ORIENT is not set
 CT_LIBC_NEWLIB_LTO=y
 CT_LIBC_NEWLIB_EXTRA_CONFIG_ARRAY="--enable-newlib-elix-level=3"
-CT_CC_GCC_ENABLE_CXX_FLAGS="-fvtable-gc -ffunction-sections -fdata-sections -flto -ffat-lto-objects -mrelax"
+CT_CC_GCC_ENABLE_CXX_FLAGS="-fvtable-gc -ffunction-sections -fdata-sections -flto -ffat-lto-objects"
 CT_CC_GCC_EXTRA_CONFIG_ARRAY="--enable-libbacktrace"
 CT_CC_GCC_MULTILIB_LIST=""
 # CT_CC_GCC_STATIC_LIBSTDCXX is not set
