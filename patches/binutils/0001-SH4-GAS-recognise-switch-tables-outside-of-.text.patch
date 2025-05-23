@@ -1,0 +1,34 @@
+From 43c539ce95b3b80cfcd0b93e03ecdb5beb54ff81 Mon Sep 17 00:00:00 2001
+From: QBos07 <qubos@outlook.de>
+Date: Fri, 23 May 2025 19:42:34 +0000
+Subject: [PATCH] SH4: GAS: recognise switch tables outside of .text
+
+Use the SEC_CODE flag instead of just ".text" to decide if a section
+contains code when deciding if a relocation is part of a switch table.
+This allows the usage of alternative sections for relaxed code storage.
+A switch compiled by gcc with -ffunction-sections and -mrelax would
+could get destroyed without these relocations.
+
+Signed-off-by: Quentin Boswank <qubos@outlook.de>
+---
+ gas/config/tc-sh.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/gas/config/tc-sh.h b/gas/config/tc-sh.h
+index fb1e4b81244..a88dc4ea8db 100644
+--- a/gas/config/tc-sh.h
++++ b/gas/config/tc-sh.h
+@@ -70,8 +70,8 @@ extern int sh_force_relocation (struct fix *);
+ #define SWITCH_TABLE(FIX)				\
+   ((FIX)->fx_addsy != NULL				\
+    && (FIX)->fx_subsy != NULL				\
+-   && S_GET_SEGMENT ((FIX)->fx_addsy) == text_section	\
+-   && S_GET_SEGMENT ((FIX)->fx_subsy) == text_section	\
++   && (S_GET_SEGMENT ((FIX)->fx_addsy)->flags & SEC_CODE) != 0	\
++   && (S_GET_SEGMENT ((FIX)->fx_subsy)->flags & SEC_CODE) != 0	\
+    && ((FIX)->fx_r_type == BFD_RELOC_32			\
+        || (FIX)->fx_r_type == BFD_RELOC_16		\
+        || (FIX)->fx_r_type == BFD_RELOC_8))
+-- 
+2.49.0
+
