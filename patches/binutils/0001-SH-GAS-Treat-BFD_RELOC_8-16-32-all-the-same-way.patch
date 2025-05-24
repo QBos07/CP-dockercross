@@ -1,4 +1,4 @@
-From cf69b47327acefbc9973843bc029ccd7ffe0c203 Mon Sep 17 00:00:00 2001
+From 2ab24d51b7f1d902cee501a2838c7a66dccb1808 Mon Sep 17 00:00:00 2001
 From: QBos07 <qubos@outlook.de>
 Date: Sat, 24 May 2025 13:53:10 +0000
 Subject: [PATCH] SH: GAS: Treat BFD_RELOC_8/16/32 all the same way
@@ -6,16 +6,24 @@ Subject: [PATCH] SH: GAS: Treat BFD_RELOC_8/16/32 all the same way
 While they should only diffrentiate between there sizes, 16 and 32 where
 treated pretty diffrently from 8 wich resulted in the zeroing of .word
 or .long jumptables when relaxing. Using .byte in these cases created it
-correctly. This unifies 16 and 32 to follow the 8 way and fixes such
-jumptabels.
+correctly. This unifies all three and fixes such jumptabels.
 ---
- gas/config/tc-sh.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+ gas/config/tc-sh.c | 15 ++++++++++-----
+ 1 file changed, 10 insertions(+), 5 deletions(-)
 
 diff --git a/gas/config/tc-sh.c b/gas/config/tc-sh.c
-index db11939a350..be791b11eac 100644
+index db11939a350..2812228f567 100644
 --- a/gas/config/tc-sh.c
 +++ b/gas/config/tc-sh.c
+@@ -3376,7 +3376,7 @@ apply_full_field_fix (fixS *fixP, char *buf, bfd_vma val, int size)
+ {
+   reloc_howto_type *howto;
+ 
+-  if (fixP->fx_addsy != NULL || fixP->fx_pcrel)
++  if ((fixP->fx_addsy != NULL || fixP->fx_pcrel) && !SWITCH_TABLE (fixP))
+     {
+       howto = bfd_reloc_type_lookup (stdoutput, fixP->fx_r_type);
+       if (howto && !howto->partial_inplace)
 @@ -3533,7 +3533,6 @@ md_apply_fix (fixS *fixP, valueT *valP, segT seg ATTRIBUTE_UNUSED)
        *buf = val >> 2;
        break;
@@ -33,7 +41,7 @@ index db11939a350..be791b11eac 100644
        break;
  
      case BFD_RELOC_SH_PCRELIMM8BY4:
-@@ -3603,13 +3602,16 @@ md_apply_fix (fixS *fixP, valueT *valP, segT seg ATTRIBUTE_UNUSED)
+@@ -3603,13 +3602,19 @@ md_apply_fix (fixS *fixP, valueT *valP, segT seg ATTRIBUTE_UNUSED)
        buf[highbyte] |= (val >> 8) & 0xf;
        break;
  
@@ -46,9 +54,12 @@ index db11939a350..be791b11eac 100644
      case BFD_RELOC_16:
 -      apply_full_field_fix (fixP, buf, val, 2);
 +    case BFD_RELOC_32:
-+      max = (1 << (fixP->fx_size * 8)) - 1;
-+      min = -max;
-+      md_number_to_chars(buf, val, fixP->fx_size);
++      if (fixP->fx_size < sizeof(long))
++      {
++	max = (1ul << (fixP->fx_size * 8)) - 1;
++	min = -max;
++      }
++      apply_full_field_fix (fixP, buf, val, fixP->fx_size);
        break;
  
      case BFD_RELOC_SH_USES:
