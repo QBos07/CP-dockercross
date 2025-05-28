@@ -2,7 +2,7 @@ diff --git a/ld/emulparams/shelf.sh b/ld/emulparams/shelf.sh
 index 63c2ff19..e63a57ab 100644
 --- a/ld/emulparams/shelf.sh
 +++ b/ld/emulparams/shelf.sh
-@@ -4,20 +4,15 @@
+@@ -4,20 +4,32 @@
  SCRIPT_NAME=elf
  OUTPUT_FORMAT="elf32-sh"
  NO_REL_RELOCS=yes
@@ -28,5 +28,22 @@ index 63c2ff19..e63a57ab 100644
 -# We do not need .stack for shared library.
 -test -n "$CREATE_SHLIB" && unset STACK_ADDR
 +
-+OTHER_READWRITE_SECTIONS="
-+  .note.hollyhock ${RELOCATING-0} : { *(.note.hollyhock) }"
++OTHER_READONLY_SECTIONS="
++  .note.hollyhock : { *(.note.hollyhock) }"
++
++OTHER_SECTIONS="
++  . = SEGMENT_START("xmem-segment", 0xE5007000);
++  .oc_mem.x : {
++    *(.oc_mem.x.dma*)
++    *(.oc_mem.x*)
++  }
++  . = SEGMENT_START("ymem-segment", 0xE5017000);
++  .oc_mem.y : {
++    *(.oc_mem.y.dma*)
++    *(.oc_mem.y*)
++  }
++  . = SEGMENT_START("ilmem-segment", 0xE5200000);
++  .oc_mem.il : {
++    *(.oc_mem.il.dma*)
++    *(.oc_mem.il*)
++  }"
