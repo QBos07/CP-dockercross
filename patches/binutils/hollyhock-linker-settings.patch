@@ -32,17 +32,17 @@ index 63c2ff19..e63a57ab 100644
 +  .note.hollyhock : { *(.note.hollyhock) }"
 +
 +OTHER_SECTIONS="
-+  . = SEGMENT_START("xmem-segment", 0xE5007000);
++  . = SEGMENT_START(\"xmem-segment\", 0xE5007000);
 +  .oc_mem.x : {
 +    *(.oc_mem.x.dma*)
 +    *(.oc_mem.x*)
 +  }
-+  . = SEGMENT_START("ymem-segment", 0xE5017000);
++  . = SEGMENT_START(\"ymem-segment\", 0xE5017000);
 +  .oc_mem.y : {
 +    *(.oc_mem.y.dma*)
 +    *(.oc_mem.y*)
 +  }
-+  . = SEGMENT_START("ilmem-segment", 0xE5200000);
++  . = SEGMENT_START(\"ilmem-segment\", 0xE5200000);
 +  .oc_mem.il : {
 +    *(.oc_mem.il.dma*)
 +    *(.oc_mem.il*)
