@@ -10,7 +10,7 @@ RUN apt-get update -y && apt-get upgrade -y && \
 RUN apt-get install -y --reinstall ca-certificates
 RUN mkdir -p /ct-ng-build
 WORKDIR /ct-ng-build
-RUN git clone https://github.com/QBos07/crosstool-ng.git --branch sh-fpu --depth=1
+RUN git clone https://github.com/crosstool-ng/crosstool-ng.git --branch master --depth=1
 WORKDIR /ct-ng-build/crosstool-ng
 RUN ./bootstrap && ./configure --prefix=/ct-ng
 RUN make -j && make -j install
