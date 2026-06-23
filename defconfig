@@ -26,6 +26,9 @@ CT_LIBC_NEWLIB_EXTRA_SECTIONS=y
 # CT_LIBC_NEWLIB_WIDE_ORIENT is not set
 CT_LIBC_NEWLIB_LTO=y
 CT_LIBC_NEWLIB_EXTRA_CONFIG_ARRAY="--enable-newlib-elix-level=3"
+CT_GCC_SRC_DEVEL=y
+CT_GCC_DEVEL_URL="https://github.com/olegendo/gcc.git"
+CT_GCC_DEVEL_BRANCH="devel/sh-lra"
 CT_CC_GCC_ENABLE_CXX_FLAGS="-ffunction-sections -fdata-sections"
 CT_CC_GCC_CORE_EXTRA_CONFIG_ARRAY="--enable-initfini-array"
 CT_CC_GCC_EXTRA_CONFIG_ARRAY="--enable-libbacktrace --enable-initfini-array"
