@@ -137,8 +137,8 @@ jobs:
         run: |
           docker buildx imagetools create \
             $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$META_JSON") \
-            $(jq -cr '.annotations | map("--annotation \'" + . + "\'") | join(" ")' <<< "$META_JSON") \
-            $(jq -cr 'map(.image) | join(" ")' <<< "$(BUILD_JSON)")
+            $(jq -cr '.annotations | map("--annotation \"" + . + "\"") | join(" ")' <<< "$META_JSON") \
+            $(jq -cr 'map(.image) | join(" ")' <<< "$BUILD_JSON")
 
       - name: Sign published images
         env:
