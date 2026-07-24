@@ -19,6 +19,8 @@ env:
 
 jobs:
   metadata:
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
 
     outputs:
