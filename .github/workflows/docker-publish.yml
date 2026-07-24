@@ -25,14 +25,17 @@ jobs:
       tags: ${{ steps.meta.outputs.tags }}
       labels: ${{ steps.meta.outputs.labels }}
       json: ${{ steps.meta.outputs.json }}
+      image-name: ${{ steps.image-name.outputs.image-name }}
 
     steps:
-      - uses: actions/checkout@v7
-
       - id: meta
         uses: docker/metadata-action@v6
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+      - id: image-name
+        run: |
+          echo "image-name=$(echo '${{ steps.meta.outputs.json }}' | jq -r '.tags[0].name' | sed 's/:[^:]*$//')" >> "$GITHUB_OUTPUT"
 
   build:
     name: Build (${{ matrix.arch }})
@@ -61,8 +64,6 @@ jobs:
       json: ${{ steps.matrix-output.outputs.json }}
 
     steps:
-      - uses: actions/checkout@v7
-
       - uses: jlumbroso/free-disk-space@v1.3.1
         with:
           tool-cache: true
@@ -82,14 +83,12 @@ jobs:
           context: .
           platforms: ${{ matrix.platform }}
 
-          push: ${{ github.event_name != 'pull_request' }}
-
           labels: ${{ needs.metadata.outputs.labels }}
 
           no-cache: ${{ github.event_name == 'schedule' }}
 
           outputs: |
-            type=image,push-by-digest=true,name-canonical=true,push=${{ github.event_name != 'pull_request' }}
+            type=image,name=${{ needs.metadata.outputs.image-name }},push-by-digest=true,name-canonical=true,push=${{ github.event_name != 'pull_request' }}
 
           cache-from: type=gha,scope=${{ matrix.arch }}
           cache-to: type=gha,mode=max,scope=${{ matrix.arch }}
@@ -100,7 +99,7 @@ jobs:
           yaml: |
             arch: ${{ matrix.arch }}
             digest: ${{ steps.build.outputs.digest }}
-            image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
+            image: ${{ needs.metadata.outputs.image-name }}@${{ steps.build.outputs.digest }}
             
 
   publish:
