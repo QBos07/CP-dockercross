@@ -145,8 +145,8 @@ jobs:
           TAGS: ${{ needs.metadata.outputs.tags }}
         run: |
           images=""
-          DIGEST=$(docker buildx imagetools inspect "$TAG" --format '{{json .Manifest.Digest}}' | tr -d '"')
           for tag in ${TAGS}; do
+            DIGEST=$(docker buildx imagetools inspect "$TAG" --format '{{json .Manifest.Digest}}' | tr -d '"')
             images+="${tag}@${DIGEST} "
           done
           cosign sign --yes ${images}
