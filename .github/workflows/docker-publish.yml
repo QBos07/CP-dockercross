@@ -55,10 +55,10 @@ jobs:
     permissions:
       contents: read
       packages: write
+      actions: read
 
     outputs:
-      digest-amd64: ${{ steps.digest.outputs.digest-amd64 }}
-      digest-arm64: ${{ steps.digest.outputs.digest-arm64 }}
+      json: ${{ steps.matrix-output.outputs.json }}
 
     steps:
       - uses: actions/checkout@v7
@@ -94,10 +94,14 @@ jobs:
           cache-from: type=gha,scope=${{ matrix.arch }}
           cache-to: type=gha,mode=max,scope=${{ matrix.arch }}
 
-      - id: digest
-        if: github.event_name != 'pull_request'
-        run: |
-          echo "digest-${{ matrix.arch }}=${{ steps.build.outputs.digest }}" >> "$GITHUB_OUTPUT"
+      - uses: beacon-biosignals/matrix-output@v1
+        id: matrix-output
+        with:
+          yaml: |
+            arch: ${{ matrix.arch }}
+            digest: ${{ steps.build.outputs.digest }}
+            image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
+            
 
   publish:
     name: Publish multi-arch image
@@ -129,15 +133,12 @@ jobs:
       - name: Create manifest
         env:
           TAGS: ${{ needs.metadata.outputs.tags }}
-          IMAGE: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          AMD64: ${{ needs.build.outputs.digest-amd64 }}
-          ARM64: ${{ needs.build.outputs.digest-arm64 }}
+          IMAGES: ${{ fromJson(needs.build.outputs.json).*.image }}
         run: |
           while read TAG; do
             docker buildx imagetools create \
               -t "$TAG" \
-              "$IMAGE@$AMD64" \
-              "$IMAGE@$ARM64"
+              "$IMAGES"
           done <<< "$TAGS"
 
       - name: Sign published images
