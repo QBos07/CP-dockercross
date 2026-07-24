@@ -24,6 +24,7 @@ jobs:
     outputs:
       tags: ${{ steps.meta.outputs.tags }}
       labels: ${{ steps.meta.outputs.labels }}
+      annotations: ${{ steps.meta.outputs.annotations }}
       json: ${{ steps.meta.outputs.json }}
       image-name: ${{ steps.image-name.outputs.image-name }}
 
@@ -83,6 +84,7 @@ jobs:
           platforms: ${{ matrix.platform }}
 
           labels: ${{ needs.metadata.outputs.labels }}
+          annotations: ${{ needs.metadata.outputs.annotations }}
 
           no-cache: ${{ github.event_name == 'schedule' }}
 
@@ -126,24 +128,25 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: sigstore/cosign-installer@v4
+      - uses: sigstore/cosign-installer@v4.1.2
 
       - name: Create manifest
         env:
-          TAGS: ${{ needs.metadata.outputs.tags }}
+          META_JSON: ${{ needs.metadata.outputs.json }}
           IMAGES: ${{ fromJson(needs.build.outputs.json).*.image }}
         run: |
-          while read TAG; do
-            docker buildx imagetools create \
-              -t "$TAG" \
-              "$IMAGES"
-          done <<< "$TAGS"
+          docker buildx imagetools create \
+            $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$META_JSON") \
+            $(jq -cr '.annotations | map("--annotation \'" + . + "\'") | join(" ")' <<< "$META_JSON") \
+            "$IMAGES"
 
       - name: Sign published images
         env:
           TAGS: ${{ needs.metadata.outputs.tags }}
         run: |
-          while read TAG; do
-            DIGEST=$(docker buildx imagetools inspect "$TAG" --format '{{json .Manifest.Digest}}' | tr -d '"')
-            cosign sign --yes "$TAG@$DIGEST"
-          done <<< "$TAGS"
+          images=""
+          DIGEST=$(docker buildx imagetools inspect "$TAG" --format '{{json .Manifest.Digest}}' | tr -d '"')
+          for tag in ${TAGS}; do
+            images+="${tag}@${DIGEST} "
+          done
+          cosign sign --yes ${images}
