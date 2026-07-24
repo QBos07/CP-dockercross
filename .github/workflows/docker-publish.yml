@@ -134,12 +134,11 @@ jobs:
         env:
           META_JSON: ${{ needs.metadata.outputs.json }}
           BUILD_JSON: ${{ needs.build.outputs.json }}
-        shell: zsh
         run: |
-          docker buildx imagetools create \
+          echo docker buildx imagetools create \
             $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$META_JSON") \
-            $(jq -cr '.annotations | map("--annotation \"" + . + "\"") | join(" ")' <<< "$META_JSON") \
-            $(jq -cr 'map(.image) | join(" ")' <<< "$BUILD_JSON")
+            $(jq -cr '.annotations | map("--annotation \"" + sub("^manifest:"; "index:") + "\"") | join(" ")' <<< "$META_JSON") \
+            $(jq -cr 'map(.image) | join(" ")' <<< "$BUILD_JSON") | sh
 
       - name: Sign published images
         env:
