@@ -80,7 +80,6 @@ jobs:
       - id: build
         uses: docker/build-push-action@v7
         with:
-          context: .
           platforms: ${{ matrix.platform }}
 
           labels: ${{ needs.metadata.outputs.labels }}
