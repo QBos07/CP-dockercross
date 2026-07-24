@@ -134,6 +134,7 @@ jobs:
         env:
           META_JSON: ${{ needs.metadata.outputs.json }}
           BUILD_JSON: ${{ needs.build.outputs.json }}
+        shell: zsh
         run: |
           docker buildx imagetools create \
             $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$META_JSON") \
