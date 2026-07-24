@@ -146,7 +146,7 @@ jobs:
         run: |
           images=""
           for tag in ${TAGS}; do
-            DIGEST=$(docker buildx imagetools inspect "$TAG" --format '{{json .Manifest.Digest}}' | tr -d '"')
+            DIGEST=$(docker buildx imagetools inspect "$tag" --format '{{json .Manifest.Digest}}' | tr -d '"')
             images+="${tag}@${DIGEST} "
           done
           cosign sign --yes ${images}
