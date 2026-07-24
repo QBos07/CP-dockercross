@@ -133,12 +133,12 @@ jobs:
       - name: Create manifest
         env:
           META_JSON: ${{ needs.metadata.outputs.json }}
-          IMAGES: ${{ fromJson(needs.build.outputs.json).*.image }}
+          BUILD_JSON: ${{ needs.build.outputs.json }}
         run: |
           docker buildx imagetools create \
             $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$META_JSON") \
             $(jq -cr '.annotations | map("--annotation \'" + . + "\'") | join(" ")' <<< "$META_JSON") \
-            "$IMAGES"
+            $(jq -cr 'map(.image) | join(" ")' <<< "$(BUILD_JSON)")
 
       - name: Sign published images
         env:
