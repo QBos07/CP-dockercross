@@ -22,7 +22,7 @@ RUN apt-get update -y && apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
     gperf bison flex texinfo help2man make libncurses6 \
     autoconf automake libtool libtool-bin gawk wget bzip2 xz-utils unzip \
-    patch rsync git meson ninja-build \
+    patch rsync git meson ninja-build pkgconf \
     gdc gcc g++ binutils libstdc++6 zstd zlib1g-dev
 RUN apt-get install -y --reinstall ca-certificates
 ARG TARGETPLATFORM
