@@ -26,7 +26,7 @@ CT_LIBC_NEWLIB_REENT_SMALL=y
 CT_LIBC_NEWLIB_EXTRA_SECTIONS=y
 CT_LIBC_NEWLIB_WIDE_ORIENT=y
 CT_LIBC_NEWLIB_LTO=y
-CT_LIBC_NEWLIB_EXTRA_CONFIG_ARRAY="--enable-newlib-elix-level=3"
+CT_LIBC_NEWLIB_EXTRA_CONFIG_ARRAY="--enable-newlib-elix-level=4"
 CT_CC_GCC_ENABLE_CXX_FLAGS="-ffunction-sections -fdata-sections"
 CT_CC_GCC_CORE_EXTRA_CONFIG_ARRAY="--enable-initfini-array"
 CT_CC_GCC_EXTRA_CONFIG_ARRAY="--enable-libbacktrace --enable-initfini-array"
