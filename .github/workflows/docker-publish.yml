@@ -80,6 +80,13 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Write deploy key
+        env:
+          SSH_KEY: ${{ secrets.OLEGENDO_GCC_TESTING }}
+        run: |
+          printf '%s\n' "$SSH_KEY" > "$RUNNER_TEMP/olegendo-gcc-testing.key"
+          chmod 600 "$RUNNER_TEMP/olegendo-gcc-testing.key"
+
       - id: build
         uses: docker/build-push-action@v7
         with:
@@ -95,6 +102,8 @@ jobs:
 
           cache-from: type=gha,scope=${{ matrix.arch }}
           cache-to: type=gha,mode=max,scope=${{ matrix.arch }}
+
+          ssh: default=${{ runner.temp }}/olegendo-gcc-testing.key
 
       - uses: beacon-biosignals/matrix-output@v1
         id: matrix-output

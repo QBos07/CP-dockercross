@@ -1,9 +1,65 @@
-diff --git a/libgcc/config/sh/crt1.S b/libgcc/config/sh/crt1.S
-deleted file mode 100644
-index e6ed3456c..000000000
---- a/libgcc/config/sh/crt1.S
-+++ /dev/null
-@@ -1,724 +0,0 @@
+diff --git a/libgcc/config/sh/crt1.c b/libgcc/config/sh/crt1.c
+new file mode 100644
+index 000000000..bac2daf80
+--- /dev/null
++++ b/libgcc/config/sh/crt1.c
+@@ -0,0 +1,39 @@
++
++typedef int jmp_buf[20];
++
++static int exit_code;
++static jmp_buf buf;
++
++extern char **environ __attribute__((weak));
++
++int setjmp(jmp_buf buf) __attribute__((returns_twice));
++void longjmp(jmp_buf buf, int ret) __attribute__((noreturn));
++void exit(int code) __attribute__((noreturn));
++void __libc_init_array(void);
++void __libc_fini_array(void);
++
++void cas_setup(void);
++void cas_cleanup(void);
++
++int main(int argc, char **argv, char **envp);
++
++int start(int argc, char **argv, char **envp)
++{
++    if (setjmp(buf) != 0)
++    {
++        __libc_fini_array();
++        cas_cleanup();
++        return exit_code;
++    }
++    if (&environ)
++        environ = envp;
++    cas_setup();
++    __libc_init_array();
++    exit(main(argc, argv, envp));
++}
++
++__attribute__((noreturn)) void _exit_address(int status)
++{
++  exit_code = status;
++  longjmp(buf, 1);
++}
+\ No newline at end of file
+diff --git a/libgcc/config/sh/t-sh b/libgcc/config/sh/t-sh
+index 01ad7d8c2..fa2873f64 100644
+--- a/libgcc/config/sh/t-sh
++++ b/libgcc/config/sh/t-sh
+@@ -23,7 +23,7 @@ LIB1ASMFUNCS = _ashiftrt _ashiftrt_n _ashiftlt _lshiftrt _movmem \
+   $(LIB1ASMFUNCS_CACHE)
+ LIB1ASMFUNCS_CACHE = _ic_invalidate _ic_invalidate_array
+ 
+-crt1.o: $(srcdir)/config/sh/crt1.S
++crt1.o: $(srcdir)/config/sh/crt1.c
+ 	$(gcc_compile) -c $<
+ 
+ ic_invalidate_array_4-100.o: $(srcdir)/config/sh/lib1funcs.S
+--- a/libgcc/config/sh/crt1.S	2026-09-23 09:11:44.000000000 +0000
++++ /dev/null	2026-08-22 13:02:32.142299040 +0000
+@@ -1,794 +0,0 @@
 -/* Copyright (C) 2000-2026 Free Software Foundation, Inc.
 -   This file was pretty much copied from newlib.
 -
@@ -154,12 +210,25 @@ index e6ed3456c..000000000
 -	mov.l	r1, @r0
 -#endif /* PROFILE */
 -
+-	.weak	__preinit_array_start
+-	.weak	__preinit_array_end
+-	.weak	__init_array_start
+-	.weak	__init_array_end
+-	mov.l	preinit_array_start_k,r8
+-	mov.l	preinit_array_end_k,r9
+-	bsr	run_array_fwd
+-	nop
+-
 -	! call init
 -	mov.l	init_k,r0
 -	jsr	@r0
 -	nop
 -
--	! call the mainline	
+-	mov.l	init_array_start_k,r8
+-	mov.l	init_array_end_k,r9
+-	bsr	run_array_fwd
+-	nop
+-
 -	mov.l	main_k,r0
 -	jsr	@r0
 -	nop
@@ -169,7 +238,50 @@ index e6ed3456c..000000000
 -	mov.l	exit_k,r0
 -	jsr	@r0
 -	nop
--	
+-
+-	.balign 4
+-run_array_fwd:
+-	sts.l	pr,@-r15
+-run_array_fwd_loop:
+-	cmp/eq	r8,r9
+-	bt	run_array_fwd_done
+-	mov.l	@r8+,r0
+-	jsr	@r0
+-	nop
+-	bra	run_array_fwd_loop
+-	nop
+-run_array_fwd_done:
+-	lds.l	@r15+,pr
+-	rts
+-	nop
+-
+-	.weak	__fini_array_start
+-	.weak	__fini_array_end
+-	.balign 4
+-fini_arrays:
+-	mov.l	r8,@-r15
+-	mov.l	r9,@-r15
+-	sts.l	pr,@-r15
+-	mov.l	fini_array_end_k,r8
+-	mov.l	fini_array_start_k,r9
+-fini_arrays_loop:
+-	cmp/eq	r8,r9
+-	bt	fini_arrays_done
+-	add	#-4,r8
+-	mov.l	@r8,r0
+-	jsr	@r0
+-	nop
+-	bra	fini_arrays_loop
+-	nop
+-fini_arrays_done:
+-	mov.l	real_fini_k,r0
+-	jsr	@r0
+-	nop
+-	lds.l	@r15+,pr
+-	mov.l	@r15+,r9
+-	rts
+-	mov.l	@r15+,r8
+-
 -		.balign 4
 -#ifdef PROFILE
 -stop_profiling:
@@ -217,7 +329,21 @@ index e6ed3456c..000000000
 -init_k:
 -	.long	GLOBAL(_init)
 -fini_k:
+-	.long	fini_arrays
+-real_fini_k:
 -	.long	GLOBAL(_fini)
+-preinit_array_start_k:
+-	.long	__preinit_array_start
+-preinit_array_end_k:
+-	.long	__preinit_array_end
+-init_array_start_k:
+-	.long	__init_array_start
+-init_array_end_k:
+-	.long	__init_array_end
+-fini_array_start_k:
+-	.long	__fini_array_start
+-fini_array_end_k:
+-	.long	__fini_array_end
 -#ifdef VBR_SETUP
 -old_vbr_k:
 -	.long	old_vbr
@@ -728,62 +854,3 @@ index e6ed3456c..000000000
 -	.ualong	0x0
 -	.ualong	0x0
 -#endif /* VBR_SETUP */
-diff --git a/libgcc/config/sh/crt1.c b/libgcc/config/sh/crt1.c
-new file mode 100644
-index 000000000..bac2daf80
---- /dev/null
-+++ b/libgcc/config/sh/crt1.c
-@@ -0,0 +1,39 @@
-+
-+typedef int jmp_buf[20];
-+
-+static int exit_code;
-+static jmp_buf buf;
-+
-+extern char **environ __attribute__((weak));
-+
-+int setjmp(jmp_buf buf) __attribute__((returns_twice));
-+void longjmp(jmp_buf buf, int ret) __attribute__((noreturn));
-+void exit(int code) __attribute__((noreturn));
-+void __libc_init_array(void);
-+void __libc_fini_array(void);
-+
-+void cas_setup(void);
-+void cas_cleanup(void);
-+
-+int main(int argc, char **argv, char **envp);
-+
-+int start(int argc, char **argv, char **envp)
-+{
-+    if (setjmp(buf) != 0)
-+    {
-+        __libc_fini_array();
-+        cas_cleanup();
-+        return exit_code;
-+    }
-+    if (&environ)
-+        environ = envp;
-+    cas_setup();
-+    __libc_init_array();
-+    exit(main(argc, argv, envp));
-+}
-+
-+__attribute__((noreturn)) void _exit_address(int status)
-+{
-+  exit_code = status;
-+  longjmp(buf, 1);
-+}
-\ No newline at end of file
-diff --git a/libgcc/config/sh/t-sh b/libgcc/config/sh/t-sh
-index 01ad7d8c2..fa2873f64 100644
---- a/libgcc/config/sh/t-sh
-+++ b/libgcc/config/sh/t-sh
-@@ -23,7 +23,7 @@ LIB1ASMFUNCS = _ashiftrt _ashiftrt_n _ashiftlt _lshiftrt _movmem \
-   $(LIB1ASMFUNCS_CACHE)
- LIB1ASMFUNCS_CACHE = _ic_invalidate _ic_invalidate_array
- 
--crt1.o: $(srcdir)/config/sh/crt1.S
-+crt1.o: $(srcdir)/config/sh/crt1.c
- 	$(gcc_compile) -c $<
- 
- ic_invalidate_array_4-100.o: $(srcdir)/config/sh/lib1funcs.S
