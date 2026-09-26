@@ -67,7 +67,7 @@ jobs:
       json: ${{ steps.matrix-output.outputs.json }}
 
     steps:
-      - uses: jlumbroso/free-disk-space@v1.3.1
+      - uses: jlumbroso/free-disk-space@v2.0.0
         with:
           tool-cache: true
 
