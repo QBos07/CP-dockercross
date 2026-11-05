@@ -28,7 +28,7 @@ EOF
 
 FROM --platform=$BUILDPLATFORM build-base AS ct-ng-build
 WORKDIR /ct-ng-build
-ADD --keep-git-dir https://github.com/qbos07/crosstool-ng.git#superh-moar-tuples ./
+ADD --keep-git-dir https://github.com/crosstool-ng/crosstool-ng.git ./
 RUN ./bootstrap && ./configure --prefix=/ct-ng
 RUN make -j && make -j install
 
